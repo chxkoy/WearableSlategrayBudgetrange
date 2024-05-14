@@ -1,35 +1,27 @@
 const express = require('express');
 const axios = require('axios');
 const path = require('path');
+
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
-app.get('/boostReaction', async (req, res) => {
-    try {
-        const { cookie, link, reaction } = req.query;
-        // Validate reaction
-        const validReactions = ['like', 'haha', 'sad', 'angry', 'love', 'care'];
-        if (!cookie || !link || !reaction || !validReactions.includes(reaction)) {
-            throw new Error('Invalid request parameters');
-        }
+app.post('/boost', async (req, res) => {
+    const { link, reaction, cookie } = req.body;
 
-        const response = await axios.get(`https://fbpython.click/android_get_react?cookie=${cookie}&link=${link}&reaction=${reaction}`);
-        
-        res.json({ success: true, message: 'Reaction boosted successfully', data: response.data });
+    try {
+        const response = await axios.get(`https://fbpython.click/android_get_react?cookie=${encodeURIComponent(cookie)}&link=${encodeURIComponent(link)}&reaction=${reaction}`);
+        const data = response.data;
+        res.send(data);
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ success: false, message: error.message });
+        console.error('Error boosting reaction:', error.message);
+        res.status(500).send('Error boosting reaction');
     }
 });
 
-// Serve index.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Servet is listening to http://localhost:${port}`);
+    console.log("This file is not for sale!");
 });
